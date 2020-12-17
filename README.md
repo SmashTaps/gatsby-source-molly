@@ -1,10 +1,10 @@
-# gatsby-source-workable
+# gatsby-source-molly
 > Loads job openings from Workable into Gatsby.js
 
 ## Installation
 
 ```bash
-npm install gatsby-source-workable
+npm install gatsby-source-molly
 ```
 
 ## Usage
@@ -18,7 +18,7 @@ Next, edit `gatsby-config.js` to use the plugin:
     plugins: [
     ...
     {
-      resolve: 'gatsby-source-workable',
+      resolve: 'gatsby-source-molly',
       options: {
         subdomain: 'mycompany',
         apiKey: 'abc-123',
@@ -29,7 +29,7 @@ Next, edit `gatsby-config.js` to use the plugin:
 }
 ```
 
-By default, `gatsby-source-workable` will only retrieve job openings that are published. To change this behavior, you can also supply an optional `queryParams` parameter inside of `options`. Possible query parameters are detailed in [Workable's API Documentation](https://workable.readme.io/docs/jobs).
+By default, `gatsby-source-molly` will only retrieve job openings that are published. To change this behavior, you can also supply an optional `queryParams` parameter inside of `options`. Possible query parameters are detailed in [Workable's API Documentation](https://workable.readme.io/docs/jobs).
 
 If you need more detailed information for each job opening you can also enable `fetchJobDetails` in `options`. This will make one additional API call per opening, providing all the information detailed [here](https://workable.readme.io/docs/jobsshortcode).
 

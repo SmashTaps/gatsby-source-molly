@@ -1,28 +1,55 @@
+import configAWS from './aws';
+import { API } from 'aws-amplify';
+
 const crypto = require('crypto')
 const axios = require('axios')
 
-exports.sourceNodes = async ({ boundActionCreators: { createNode } }, { subdomain, apiKey, queryParams = { state: 'published' }, fetchJobDetails }) => {
-  const axiosClient = axios.create({
-    baseURL: `https://${subdomain}.workable.com/spi/v3/`,
-    headers: {
-      Authorization: `Bearer ${apiKey}`
-    }
-  })
+configAWS();
 
-  // Get list of all jobs
-  const { data: { jobs } } = await axiosClient.get('/jobs', { params: queryParams });
+async function getPublicJobList(handler) {
+  return await API.get('company', `/jobs/${handler}`);
+}
+
+async function fetchJobTypes(data) {
+  return await API.get('jobs', '/types', { headers: {} });
+}
+
+async function fetchCountryList() {
+  return await API.get('countryList', '');
+}
+
+exports.sourceNodes = async ({ boundActionCreators: { createNode } }, { companyId }) => {
+
+  const fetchedCountries = await fetchCountryList();
+  const fetchedJobTypes = await fetchJobTypes();
+  const fetchedJobs = await getPublicJobList(companyId);
+
+  const countryIndex = fetchedCountries.data.reduce((obj, cur, i) => {
+    obj[cur.id] = cur;
+    return obj;
+  }, {});
+
+  const jobTypeIndex = fetchedJobTypes.data.reduce((obj, cur, i) => {
+    obj[cur.id] = cur;
+    return obj;
+  }, {});
+
+  const jobs = fetchedJobs.jobs.map(job => {
+    job.jobType = jobTypeIndex[job.jobType] && jobTypeIndex[job.jobType].title || job.jobType;
+    job.country = countryIndex[job.country] && countryIndex[job.country].title || job.country;
+
+    return job;
+  });
 
   for(const job of jobs) {
-    // Fetch job details if needed
-    const jobData = fetchJobDetails ? (await axiosClient.get(`/jobs/${job.shortcode}`)).data : job;
-
-    const jsonString = JSON.stringify(jobData)
+    job.id = job.jobId
+    const jsonString = JSON.stringify(job)
     const gatsbyNode = {
-      ...jobData,
+      ...job,
       children: [],
       parent: '__SOURCE__',
       internal: {
-        type: 'WorkableJob',
+        type: 'MollyJob',
         content: jsonString,
         contentDigest: crypto.createHash('md5').update(jsonString).digest('hex'),
       },
